@@ -5,11 +5,16 @@ date: "2026-03-23"
 output: pdf_document
 ---
 
-# Seção
 
-## Subseção
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library (tidyr)
+library (ggplot2)
+```
 
-texto corrido
+
+## Exercício 1:
 
 ```{r municipios}
 municipios <- read.csv("municipios_virgula.csv")
@@ -18,20 +23,276 @@ municipios
 ```{r}
 nrow(municipios)
 ```
-# Seção
-
-## Subseção
-
-texto corrido
-
-- qualquer
-- texto
-
-1. abc
-2. def
-
-Tente salvar usando `read_pdf`.
 
 ```{r}
 colnames(municipios)
 ```
+
+## Exercício 2: 
+```{}
+read.csv("municipios_pontovirgula.csv")
+```
+
+Ocorre erro ao ler o arquivo, consta que há mais colunas que nomes de colunas.No caso, é porque o "read.csv" não entende a separação dos dados quando eles estão em ponto e vírgula, assim, ele não é capaz de abrir essa planilha. 
+
+```{r municipios_pontovirgula}
+read.csv2("municipios_pontovirgula.csv", fileEncoding = "latin1")
+```
+
+Utilizando "read.csv2", foi possível abrir a planilha. Com relação às diferenças, ambos "read.csv" e "read.csv2" são úteis para abrir arquivos. No entanto, o primeiro está em padrão americano, então entende planilhas nas quais os dados são separados por vírgula. Já o segundo, trata-se do padrão europeu ou brasileiro, o qual entende como separados o ponto e vírgula. 
+
+## Exercício 3: 
+
+```{r eleicoes 2022}
+read.csv("eleicoes_2022.csv")
+```
+
+```{}
+dplyr::filter(eleicoes, municipio == "Pau D'Arco")
+```
+
+Após a filtragem, consta que o nome do município aparece corretamente e está completo. 
+
+## Exercício 4: 
+
+```{r}
+idh <- read.csv2("idh_municipios.csv", fileEncoding = "latin1")
+
+str(idh)
+```
+
+Após realizar o código, nota-se que as categorias "idh_2010", "idh_educacao", "idh_longevidade" e "idh_renda" são numéricas. 
+
+
+## Exercício 5: 
+
+Tentativa (a): ocorre erro, pois os dados estão separados por ponto e vírgula. Logo, não é possível verificar os dados. 
+```{r}
+# read.csv("idh_municipios.csv")
+```
+
+Tentativa (b): os dados do arquivo são importados, mas nota-se que em palavras com acentos, ele importa errado, dado que faltou colocar o argumento "latin1", que permite a leitura correta dos acentos. Com relação às colunas, as colunas numéricas são numéricas.
+```{r}
+read.csv2("idh_municipios.csv")
+```
+
+```{r}
+idh <- read.csv2("idh_municipios.csv")
+str(idh)
+```
+
+Tentativa (c): todos os dados do arquivo são importados corretamente. Com relação às colunas, as colunas numéricas também são numéricas.
+```{r idh}
+read.csv2("idh_municipios.csv", fileEncoding = "Latin1")
+```
+
+```{r}
+idh <- read.csv2("idh_municipios.csv", fileEncoding = "Latin1")
+str(idh)
+```
+
+## Exercício 6:
+```{r analise municipios}
+municipios <- read.csv("municipios_virgula.csv")
+str(municipios)
+```
+```{r analise municipios 1}
+municipios <- read.csv("municipios_virgula.csv")
+municipios %>%
+  arrange(desc(idh)) %>%
+  head(1)
+```
+
+O município com maior IDH é florianópolis. 
+
+```{r analise municipios 2}
+municipios <- read.csv("municipios_virgula.csv")
+municipios %>%
+  arrange(idh) %>%
+  head(1)
+```
+
+O município com menor IDH é Pau D'Arco. 
+
+## Exercício 7:
+
+```{r municipios analise}
+municipios <- read.csv("municipios_virgula.csv")
+str(municipios)
+
+municipios %>%
+summarise(
+  populacao_total = sum(populacao),
+  populacao_media = mean(populacao)
+)
+```
+
+
+## Exercício 8: 
+
+```{r eleicoes analise}
+eleicoes <- read.csv("eleicoes_2022.csv")
+colnames(eleicoes)
+
+eleicoes %>%
+  group_by(candidato) %>%
+  summarise(total_votos = sum(votos)) %>%
+  arrange(desc(total_votos))
+
+```
+
+Usando o banco idh_municipios.csv (importado corretamente), calcule o IDH médio por região do Brasil. Qual região tem o maior IDH médio? E o menor?
+
+## Exercício 9: 
+```{r idh analise}
+idh <- read.csv2("idh_municipios.csv", fileEncoding = "Latin1")
+str(idh)
+
+idh %>%
+  group_by(regiao) %>%
+  summarise(media_idh = mean(idh_2010)) %>%
+  arrange(desc(media_idh))
+
+```
+
+## Exercício 10:
+Usando o banco eleicoes_2022.csv, crie uma nova coluna chamada vencedor que indica, para cada município, o candidato com o maior percentual de votos. Dica: agrupe por município, filtre a linha com o maior percentual (slice_max()), e selecione as colunas relevantes.
+
+```{r}
+eleicoes <- read.csv("eleicoes_2022.csv")
+colnames(eleicoes)
+```
+```{r}
+eleicoes <- read.csv("eleicoes_2022.csv")
+
+vencedores <- eleicoes %>%
+  group_by(municipio) %>%
+  slice_max(percentual, n = 1) %>%
+  ungroup()
+
+vencedores
+```
+
+
+## Exercício 11: 
+
+```{r}
+idh <- read.csv2("idh_municipios.csv", fileEncoding = "latin1")
+
+idh <- idh %>%
+  mutate(
+    categoria_idh = case_when(
+      idh_2010 >= 0.8 ~ "Muito Alto",
+      idh_2010 >= 0.7 & idh_2010 < 0.8 ~ "Alto",
+      idh_2010 >= 0.55 & idh_2010 < 0.7 ~ "Médio",
+      idh_2010 < 0.55 ~ "Baixo"
+    )
+  )
+
+idh %>%
+  count(categoria_idh)
+```
+
+Há 18 municípios pertencentes à categoria "Alto" e 7 municípios pertencentes à categoria "Muito Alto". 
+
+
+## Exercício 12: 
+```{r}
+idh <- read.csv2("idh_municipios.csv", fileEncoding = "latin1")
+
+medias <- idh %>%
+  group_by(regiao) %>%
+  summarise(
+    educacao = mean(idh_educacao),
+    longevidade = mean(idh_longevidade),
+    renda = mean(idh_renda)
+  )
+ show(medias)
+ 
+ medias_long <- medias %>%
+  pivot_longer(
+    cols = c(educacao, longevidade, renda),
+    names_to = "dimensao",
+    values_to = "media"
+  )
+ 
+```
+```{r}
+idh <- read.csv2("idh_municipios.csv", fileEncoding = "latin1")
+
+medias <- idh %>%
+  group_by(regiao) %>%
+  summarise(
+    educacao = mean(idh_educacao),
+    longevidade = mean(idh_longevidade),
+    renda = mean(idh_renda)
+  )
+ 
+ medias_long <- medias %>%
+  pivot_longer(
+    cols = c(educacao, longevidade, renda),
+    names_to = "dimensao",
+    values_to = "media"
+  )
+
+ maior <- medias_long %>%
+  group_by(regiao) %>%
+  slice_max(media, n = 1)
+ 
+ menor <- medias_long %>%
+  group_by(regiao) %>%
+  slice_min(media, n = 1)
+ 
+ show(maior)
+ show(menor)
+ 
+```
+
+## Exercício 13:
+```{r}
+municipios <- read.csv("municipios_virgula.csv")
+
+ggplot(municipios, aes(x = reorder(nome_municipio, -populacao), y = populacao)) +
+  geom_col() +
+  labs(
+    x = "Município",
+    y = "População",
+    title = "População por Município"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+## Exercício 14: 
+```{r}
+municipios <- read.csv("municipios_virgula.csv")
+
+ggplot(idh, aes(x = idh_educacao, y = idh_renda, color = regiao)) +
+  geom_point() +
+  labs(
+    x = "IDH Educação",
+    y = "IDH Renda",
+    title = "Relação entre IDH de Educação e IDH de Renda por Região"
+  )
+
+
+```
+
+## Exercício 15: 
+```{r}
+eleicoes <- read.csv("eleicoes_2022.csv")
+
+ggplot(eleicoes, aes(x = municipio, y = votos, fill = candidato)) +
+  geom_col(position = "fill") +
+  coord_flip() +
+  labs(
+    x = "Município",
+    y = "Proporção de votos",
+    title = "Proporção de votos por candidato em cada município"
+  )
+
+```
+
+
+
+
